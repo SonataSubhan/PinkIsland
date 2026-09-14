@@ -9,193 +9,258 @@
 <meta property="og:description" content="A small island, five roses, and someone waiting.">
 <meta property="og:type" content="website">
 <link rel="icon" href="/favicon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+
 <style>
 /* ------------------------------------------------------------------ palette
    Lifted from the game's own tuning table so the page and the start screen
-   read as the same place. */
+   read as the same place. Lato is the game's typeface too. */
 :root{
-  --wash-top:#FFF9FB;
-  --wash-bottom:#F9DCE6;
+  --wash-top:#FFFAFC;
+  --wash-mid:#FDEAF1;
+  --wash-bottom:#F7D6E3;
   --rose:#E8557F;
+  --rose-lit:#F2739A;
   --ink:#8A6672;
-  --ink-strong:#6E4A57;
-  --panel:rgba(255,250,252,.72);
-  --chip:#FFEAF0;
+  --ink-strong:#63424F;
+  --panel:rgba(255,252,253,.78);
+  --panel-edge:rgba(255,255,255,.9);
+  --chip:#FDE7EE;
   --chip-ink:#A8697F;
-  --hair:rgba(232,85,127,.16);
+  --hair:rgba(232,85,127,.18);
 }
 *{box-sizing:border-box}
 html{color-scheme:light}
+
 body{
   margin:0;
-  min-height:100vh;
-  padding-block:clamp(32px,7vh,72px);
+  min-height:100svh;
+  padding-block:clamp(40px,8vh,80px);
   padding-inline:16px;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:linear-gradient(170deg,var(--wash-top) 0%,var(--wash-bottom) 100%);
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--wash-top) 0%, transparent 60%),
+    linear-gradient(168deg, var(--wash-mid) 0%, var(--wash-bottom) 100%);
   background-attachment:fixed;
   color:var(--ink);
   font-family:"Lato",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-weight:400;
   -webkit-font-smoothing:antialiased;
   overflow-x:hidden;
+  cursor:default;
 }
 
-/* The petals drift behind everything and must never eat a click. */
-#petals{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+/* Petals and hearts share one canvas behind everything, and it never eats a click. */
+#stage{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 
 /* The date sits where the game's HUD puts it, in the game's HUD style. */
 .date{
-  position:fixed;top:22px;left:22px;z-index:2;
-  font-size:14px;letter-spacing:.34em;
-  color:var(--ink);opacity:.55;
+  position:fixed;top:24px;left:24px;z-index:2;
+  font-size:13px;font-weight:700;letter-spacing:.36em;
+  color:var(--ink);opacity:.5;
+  user-select:none;
 }
 
-main{position:relative;z-index:1;width:100%;max-width:560px;text-align:center}
+main{position:relative;z-index:1;width:100%;max-width:540px;text-align:center}
+
+/* --------------------------------------------------------------- the mark */
+.mark{
+  display:block;width:44px;height:auto;margin:0 auto 22px;
+  opacity:0;transform:scale(.8);
+  transition:opacity .7s ease,transform .7s cubic-bezier(.2,1.3,.4,1);
+  animation:beat 2.6s ease-in-out infinite;
+}
+.ready .mark{opacity:.95;transform:none}
+@keyframes beat{
+  0%,100%{filter:drop-shadow(0 4px 12px rgba(232,85,127,.25))}
+  50%    {filter:drop-shadow(0 6px 18px rgba(232,85,127,.45))}
+}
 
 /* ------------------------------------------------------------------- title */
 h1{
   margin:0;
-  font-size:clamp(40px,10.5vw,84px);
-  font-weight:800;
-  letter-spacing:.13em;
+  font-size:clamp(38px,9.5vw,74px);
+  font-weight:900;
+  letter-spacing:.11em;
   color:var(--rose);
-  line-height:1.05;
-  text-shadow:0 0 34px rgba(255,246,248,.95);
+  line-height:1.06;
+  text-shadow:0 2px 28px rgba(255,255,255,.9), 0 0 60px rgba(232,85,127,.14);
 }
-h1 span{
+.word{display:inline-block;white-space:nowrap}
+.ltr{
   display:inline-block;
   opacity:0;
-  transform:translateY(10px);
-  transition:opacity .5s ease,transform .5s ease;
+  transform:translateY(14px) rotate(-4deg);
+  transition:opacity .55s ease,transform .55s cubic-bezier(.2,1.1,.35,1);
 }
-h1 span.in{opacity:1;transform:none}
-h1 .sp{width:.34em}
+.ltr.in{opacity:1;transform:none}
 
 .subtitle{
-  margin:14px 0 0;
-  font-size:15px;letter-spacing:.28em;
-  opacity:0;transition:opacity .9s ease .55s;
+  margin:16px 0 0;
+  font-size:13px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;
+  opacity:0;transition:opacity .9s ease .45s;
 }
-.ready .subtitle{opacity:.72}
+.ready .subtitle{opacity:.55}
 
 /* -------------------------------------------------------------------- card */
 .card{
-  margin:34px auto 0;
-  padding:26px 24px 22px;
+  margin:36px auto 0;
+  padding:28px 26px 24px;
   background:var(--panel);
-  border-radius:20px;
-  backdrop-filter:blur(7px);
-  opacity:0;transform:translateY(8px);
-  transition:opacity .9s ease .75s,transform .9s ease .75s;
+  border:1px solid var(--panel-edge);
+  border-radius:22px;
+  box-shadow:0 18px 46px rgba(190,120,145,.14);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  opacity:0;transform:translateY(10px);
+  transition:opacity .9s ease .6s,transform .9s ease .6s;
 }
 .ready .card{opacity:1;transform:none}
 
-.objective{margin:0;font-size:17px;line-height:1.6;color:var(--ink-strong)}
+.objective{
+  margin:0;font-size:16.5px;line-height:1.68;color:var(--ink-strong);
+}
+.objective em{font-style:normal;color:var(--rose);font-weight:700}
+
+.rule{
+  height:1px;margin:20px auto;width:56px;
+  background:linear-gradient(90deg,transparent,var(--hair),transparent);
+}
 
 .controls{
-  margin:20px 0 0;padding:0;list-style:none;
-  display:flex;flex-wrap:wrap;gap:8px 10px;justify-content:center;
+  margin:0;padding:0;list-style:none;
+  display:flex;flex-wrap:wrap;gap:10px 14px;justify-content:center;
 }
-.controls li{display:flex;align-items:center;gap:7px;font-size:12.5px;opacity:.9}
+.controls li{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;letter-spacing:.04em;opacity:.75;
+}
 .controls kbd{
-  font:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+  font:inherit;font-size:10.5px;font-weight:900;letter-spacing:.06em;
   background:var(--chip);color:var(--chip-ink);
-  padding:4px 8px;border-radius:7px;
+  padding:4px 7px;border-radius:6px;
+  box-shadow:0 1px 0 rgba(190,120,145,.18);
 }
 
 /* ------------------------------------------------------------------ button */
 .start{
-  display:inline-block;margin:30px 0 0;
-  padding:17px 44px;border-radius:999px;
-  background:var(--rose);color:#FFF8FA;
-  font-size:17px;font-weight:700;letter-spacing:.14em;
+  display:inline-block;margin:32px 0 0;
+  padding:18px 46px;border-radius:999px;
+  background:linear-gradient(160deg,var(--rose-lit) 0%,var(--rose) 100%);
+  color:#FFF9FB;
+  font-size:15px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;
   text-decoration:none;
-  box-shadow:0 12px 30px rgba(232,85,127,.28);
+  box-shadow:0 14px 34px rgba(232,85,127,.3), inset 0 1px 0 rgba(255,255,255,.3);
   animation:breathe 2.2s ease-in-out infinite alternate;
-  transition:background .25s ease,box-shadow .25s ease;
+  transition:filter .25s ease,box-shadow .25s ease;
   opacity:0;
 }
-.ready .start{opacity:1;transition:opacity .9s ease .95s}
+.ready .start{opacity:1;transition:opacity .9s ease .85s}
 .start:hover,.start:focus-visible{
-  background:#EF6A90;
-  box-shadow:0 16px 38px rgba(232,85,127,.36);
+  filter:brightness(1.06);
+  box-shadow:0 18px 44px rgba(232,85,127,.4), inset 0 1px 0 rgba(255,255,255,.42);
 }
-@keyframes breathe{from{transform:scale(1)}to{transform:scale(1.03)}}
-@media (prefers-reduced-motion:reduce){.start{animation:none}}
+.start:active{filter:brightness(.97)}
+@keyframes breathe{from{transform:scale(1)}to{transform:scale(1.028)}}
 
-.meta{margin:14px 0 0;font-size:12.5px;letter-spacing:.06em;opacity:0}
-.ready .meta{opacity:.62;transition:opacity .9s ease 1.1s}
+.meta{margin:16px 0 0;font-size:12px;letter-spacing:.12em;opacity:0}
+.ready .meta{opacity:.5;transition:opacity .9s ease 1s}
 
 .sent{
-  margin:14px 0 0;font-size:13.5px;letter-spacing:.1em;color:var(--rose);
+  margin:12px 0 0;font-size:12.5px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--rose);
   opacity:0;transition:opacity .6s ease;min-height:1.2em;
 }
-.sent.in{opacity:.9}
+.sent.in{opacity:.85}
 
 /* -------------------------------------------------------------------- note */
 .note{
-  margin:34px auto 0;max-width:460px;
-  padding:18px 20px;border-radius:16px;
+  margin:36px auto 0;max-width:440px;
+  padding:20px 22px;border-radius:18px;
   border:1px solid var(--hair);
-  font-size:13.5px;line-height:1.75;text-align:left;
+  font-size:13px;line-height:1.8;text-align:left;
   opacity:0;
-  transition:opacity .9s ease 1.25s,border-color .5s ease,background .5s ease;
+  transition:opacity .9s ease 1.15s,border-color .5s ease,background .5s ease,box-shadow .5s ease;
 }
-.ready .note{opacity:.85}
-.note.lit{background:rgba(255,250,252,.82);border-color:rgba(232,85,127,.42);opacity:1}
+.ready .note{opacity:.8}
+.note.lit{
+  background:rgba(255,252,253,.86);
+  border-color:rgba(232,85,127,.42);
+  box-shadow:0 14px 36px rgba(190,120,145,.16);
+  opacity:1;
+}
 .note h2{
-  margin:0 0 8px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--rose);font-weight:700;
+  margin:0 0 10px;font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--rose);font-weight:900;
 }
-.note p{margin:0 0 10px}
+.note p{margin:0 0 11px}
 .note p:last-child{margin-bottom:0}
 .note b{color:var(--ink-strong);font-weight:700}
 
 .egg{
-  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
-  margin:0;font-size:13px;letter-spacing:.16em;opacity:0;
-  transition:opacity .7s ease;pointer-events:none;z-index:2;
+  position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+  margin:0;font-size:12.5px;font-weight:700;letter-spacing:.2em;
+  color:var(--rose);opacity:0;
+  transition:opacity .7s ease;pointer-events:none;z-index:2;white-space:nowrap;
 }
-.egg.in{opacity:.6}
+.egg.in{opacity:.65}
 
 @media (max-width:430px){
-  .date{top:14px;left:16px;font-size:12px}
-  .card{padding:22px 18px 18px}
-  .start{padding:16px 34px;font-size:16px}
+  .date{top:16px;left:16px;font-size:11px;letter-spacing:.3em}
+  .mark{width:36px;margin-bottom:18px}
+  .card{padding:24px 18px 20px}
+  .start{padding:17px 36px;letter-spacing:.16em}
+  .note{padding:18px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .start,.mark{animation:none}
+  .ltr,.mark,.card,.subtitle,.start,.meta,.note{transition-duration:.01ms}
 }
 </style>
 </head>
 <body>
 
-<canvas id="petals" aria-hidden="true"></canvas>
+<canvas id="stage" aria-hidden="true"></canvas>
 <div class="date">02.09.2026</div>
 
 <main>
-  <h1 id="title" aria-label="Pink Island">PINK ISLAND</h1>
+  <svg class="mark" id="mark" viewBox="0 0 9 8" aria-hidden="true" shape-rendering="crispEdges"></svg>
+
+  <h1 id="title">PINK ISLAND</h1>
   <p class="subtitle">a birthday gift</p>
 
   <section class="card">
-    <p class="objective">Find the five roses hidden on the island.<br>Someone is waiting at the end of it.</p>
+    <p class="objective">Five roses are hidden on the island.<br>Find them all, and <em>someone arrives</em>.</p>
+    <div class="rule"></div>
     <ul class="controls">
-      <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</li>
-      <li><kbd>Mouse</kbd> look</li>
-      <li><kbd>Shift</kbd> run</li>
-      <li><kbd>Space</kbd> jump</li>
-      <li><kbd>E</kbd> interact</li>
+      <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>move</li>
+      <li><kbd>Mouse</kbd>look</li>
+      <li><kbd>Shift</kbd>run</li>
+      <li><kbd>Space</kbd>jump</li>
+      <li><kbd>E</kbd>interact</li>
     </ul>
   </section>
 
   <!-- ===================================================================
-       THE ONE LINE TO CHANGE. Point this at wherever the file actually
-       lives. "/PinkIsland.exe" works when the file sits in this project's
-       public/ folder; paste a full https:// URL instead when it is hosted
-       anywhere else (a GitHub release, R2, a bucket).
+       THE ONE LINE TO CHANGE — where the file actually lives.
+       It is a GitHub release asset, which is why it is a full URL and not a
+       path: a 114 MB binary is far past what belongs in a git repository,
+       and a release asset is served from GitHub's own CDN for free.
+       The `download` attribute is ignored across origins; it does not need
+       to work, because GitHub sends Content-Disposition: attachment and the
+       browser saves the file either way.
        =================================================================== -->
-  <a class="start" id="get" href="/PinkIsland.exe" download="PinkIsland.exe">Download</a>
+  <a class="start" id="get"
+     href="https://github.com/SonataSubhan/PinkIsland/releases/download/PinkIslandv2/PinkIsland.exe"
+     download="PinkIsland.exe">Download</a>
 
-  <p class="meta">Windows &middot; 119 MB &middot; one file, nothing to install</p>
+  <p class="meta">WINDOWS &middot; 114 MB &middot; ONE FILE, NOTHING TO INSTALL</p>
   <p class="sent" id="sent" role="status"></p>
 
   <section class="note" id="note">
@@ -217,31 +282,81 @@ h1 .sp{width:.34em}
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ------------------------------------------------------------- the heart
+     ONE grid, drawn two ways: as the SVG mark above the title and as every
+     little heart the cursor leaves behind. Keeping them the same shape is
+     what makes the page feel like one thing rather than two decorations,
+     and it is the same heart as the icon on the .exe. */
+  var HEART = [
+    '.XX...XX.',
+    'XXXXXXXXX',
+    'XXXXXXXXX',
+    'XXXXXXXXX',
+    '.XXXXXXX.',
+    '..XXXXX..',
+    '...XXX...',
+    '....X....'
+  ];
+
+  var cells = [];
+  HEART.forEach(function(row, y){
+    row.split('').forEach(function(c, x){ if (c === 'X') cells.push([x, y]); });
+  });
+
+  (function buildMark(){
+    var svg = document.getElementById('mark'), ns = 'http://www.w3.org/2000/svg';
+    cells.forEach(function(p){
+      var r = document.createElementNS(ns, 'rect');
+      r.setAttribute('x', p[0]); r.setAttribute('y', p[1]);
+      r.setAttribute('width', 1); r.setAttribute('height', 1);
+      r.setAttribute('fill', '#E8557F');
+      svg.appendChild(r);
+    });
+    // The little highlight the icon has, so the mark is the icon and not a
+    // silhouette of it.
+    var hi = document.createElementNS(ns, 'rect');
+    hi.setAttribute('x', 1); hi.setAttribute('y', 1);
+    hi.setAttribute('width', 1); hi.setAttribute('height', 1);
+    hi.setAttribute('fill', '#FFFFFF');
+    svg.appendChild(hi);
+  })();
+
   /* --------------------------------------------------------- title reveal
-     Letter by letter at the game's own interval (60 ms), so the page opens
-     the way the start screen does. */
+     Letter by letter at the game's own interval (60 ms). Split by WORD
+     first so the space between them is a real space that can wrap, rather
+     than a hand-measured gap that cannot. */
   var title = document.getElementById('title');
   var text  = title.textContent.trim();
+  var letters = [];
   title.textContent = '';
 
-  text.split('').forEach(function(ch, i){
-    var span = document.createElement('span');
-    if (ch === ' '){ span.className = 'sp'; span.innerHTML = '&nbsp;'; }
-    else { span.textContent = ch; }
-    title.appendChild(span);
-    setTimeout(function(){ span.classList.add('in'); }, reduced ? 0 : 220 + i * 60);
+  text.split(' ').forEach(function(word, wi, all){
+    var wrap = document.createElement('span');
+    wrap.className = 'word';
+    word.split('').forEach(function(ch){
+      var s = document.createElement('span');
+      s.className = 'ltr';
+      s.textContent = ch;
+      wrap.appendChild(s);
+      letters.push(s);
+    });
+    title.appendChild(wrap);
+    if (wi < all.length - 1) title.appendChild(document.createTextNode(' '));
+  });
+
+  letters.forEach(function(s, i){
+    setTimeout(function(){ s.classList.add('in'); }, reduced ? 0 : 260 + i * 60);
   });
 
   setTimeout(function(){
     document.body.classList.add('ready');
-  }, reduced ? 0 : 220 + text.length * 60);
+  }, reduced ? 0 : 260 + letters.length * 60);
 
-  /* -------------------------------------------------------------- petals
-     The same drift the game's start screen has: a slow fall, a sine sway, a
-     lazy spin, and paler petals further back so the depth reads. */
-  var canvas = document.getElementById('petals');
+  /* -------------------------------------------------------------- canvas */
+  var canvas = document.getElementById('stage');
   var ctx = canvas.getContext('2d');
   var petals = [];
+  var hearts = [];
 
   function size(){
     var r = window.devicePixelRatio || 1;
@@ -250,30 +365,30 @@ h1 .sp{width:.34em}
     ctx.setTransform(r, 0, 0, r, 0, 0);
   }
 
-  function make(y){
+  function makePetal(y){
     var depth = Math.random();
     return {
       x: Math.random() * window.innerWidth,
       y: y === undefined ? Math.random() * window.innerHeight : y,
       r: 4 + depth * 7,
-      speed: 14 + depth * 26,
+      speed: 13 + depth * 24,
       drift: 9 + Math.random() * 22,
       phase: Math.random() * Math.PI * 2,
-      spin: (Math.random() - 0.5) * 1.1,
+      spin: (Math.random() - 0.5) * 1.0,
       angle: Math.random() * Math.PI * 2,
-      alpha: 0.20 + depth * 0.30
+      alpha: 0.16 + depth * 0.24
     };
   }
 
   function reset(){
     size();
     petals = [];
-    var count = Math.round(Math.min(30, window.innerWidth / 34));
-    for (var i = 0; i < count; i++) petals.push(make());
-    if (reduced) petals.forEach(draw);
+    var count = Math.round(Math.min(26, window.innerWidth / 40));
+    for (var i = 0; i < count; i++) petals.push(makePetal());
+    if (reduced){ ctx.clearRect(0,0,window.innerWidth,window.innerHeight); petals.forEach(drawPetal); }
   }
 
-  function draw(p){
+  function drawPetal(p){
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(p.angle);
@@ -288,6 +403,65 @@ h1 .sp{width:.34em}
     ctx.restore();
   }
 
+  /* -------------------------------------------------------- heart trail
+     The easter egg: hearts fall out of the cursor as it moves and burst
+     from it on a click. They rise, drift, spin a little and fade. */
+  function makeHeart(x, y, burst){
+    var s = 7 + Math.random() * 7;
+    var a = burst ? Math.random() * Math.PI * 2 : Math.PI * (1.2 + Math.random() * 0.6);
+    var v = burst ? 60 + Math.random() * 130 : 18 + Math.random() * 30;
+    return {
+      x: x + (Math.random() - 0.5) * 12,
+      y: y + (Math.random() - 0.5) * 12,
+      s: burst ? s * 1.15 : s,
+      vx: Math.cos(a) * v,
+      vy: Math.sin(a) * v - (burst ? 30 : 26),
+      spin: (Math.random() - 0.5) * 2.4,
+      angle: (Math.random() - 0.5) * 0.5,
+      life: 0,
+      span: burst ? 1.1 + Math.random() * 0.5 : 0.85 + Math.random() * 0.45
+    };
+  }
+
+  function drawHeart(h){
+    var fade = 1 - h.life / h.span;
+    if (fade <= 0) return;
+    var unit = h.s / 9;
+    ctx.save();
+    ctx.translate(h.x, h.y);
+    ctx.rotate(h.angle);
+    ctx.globalAlpha = Math.min(1, fade * 1.4) * 0.85;
+    ctx.fillStyle = '#E8557F';
+    for (var i = 0; i < cells.length; i++){
+      // +0.5 on the size closes the hairline seams pixel art gets when the
+      // grid lands between device pixels.
+      ctx.fillRect(cells[i][0] * unit - h.s / 2, cells[i][1] * unit - h.s / 2, unit + 0.5, unit + 0.5);
+    }
+    ctx.restore();
+  }
+
+  var lastSpawn = 0, lastX = 0, lastY = 0, primed = false;
+
+  function trail(x, y){
+    if (reduced) return;
+    var now = performance.now();
+    var far = Math.hypot(x - lastX, y - lastY) > 26;
+    if (primed && far && now - lastSpawn > 38){
+      hearts.push(makeHeart(x, y, false));
+      if (hearts.length > 90) hearts.shift();
+      lastSpawn = now;
+      lastX = x; lastY = y;
+    }
+    if (!primed){ primed = true; lastX = x; lastY = y; }
+  }
+
+  window.addEventListener('mousemove', function(e){ trail(e.clientX, e.clientY); }, {passive:true});
+  window.addEventListener('touchmove', function(e){
+    var t = e.touches[0];
+    if (t) trail(t.clientX, t.clientY);
+  }, {passive:true});
+
+  /* ------------------------------------------------------------ the loop */
   var last = 0;
   function frame(now){
     var dt = last ? Math.min((now - last) / 1000, 0.05) : 0;
@@ -300,9 +474,22 @@ h1 .sp{width:.34em}
       p.phase += dt * 0.9;
       p.x += Math.sin(p.phase) * p.drift * dt;
       p.angle += p.spin * dt;
-      if (p.y - p.r > window.innerHeight) petals[i] = make(-20);
-      draw(p);
+      if (p.y - p.r > window.innerHeight) petals[i] = makePetal(-20);
+      drawPetal(p);
     }
+
+    for (var j = hearts.length - 1; j >= 0; j--){
+      var h = hearts[j];
+      h.life += dt;
+      if (h.life >= h.span){ hearts.splice(j, 1); continue; }
+      h.x += h.vx * dt;
+      h.y += h.vy * dt;
+      h.vy += 34 * dt;          // a little gravity, so a burst arcs
+      h.vx *= (1 - 1.1 * dt);   // and drag, so it settles rather than flies
+      h.angle += h.spin * dt;
+      drawHeart(h);
+    }
+
     requestAnimationFrame(frame);
   }
 
@@ -310,25 +497,23 @@ h1 .sp{width:.34em}
   window.addEventListener('resize', reset);
   if (!reduced) requestAnimationFrame(frame);
 
-  /* ------------------------------------------------------------ the easter
-     egg the game has: click the sky, drop a flower. Five of them and it
-     admits you found it. */
+  /* ------------------------------------------------------------ the click
+     A burst wherever you press, and the game's own line once you have done
+     it five times. */
   var clicks = 0;
   var egg = document.getElementById('egg');
+  var eggTimer;
 
   document.addEventListener('click', function(e){
-    if (e.target.closest('a, button, .card, .note')) return;
-
-    var p = make(e.clientY);
-    p.x = e.clientX;
-    p.speed = 30 + Math.random() * 20;
-    p.alpha = 0.5;
-    petals.push(p);
-    if (petals.length > 60) petals.shift();
+    if (!reduced){
+      for (var i = 0; i < 9; i++) hearts.push(makeHeart(e.clientX, e.clientY, true));
+      if (hearts.length > 120) hearts.splice(0, hearts.length - 120);
+    }
 
     if (++clicks === 5){
       egg.classList.add('in');
-      setTimeout(function(){ egg.classList.remove('in'); }, 3200);
+      clearTimeout(eggTimer);
+      eggTimer = setTimeout(function(){ egg.classList.remove('in'); }, 3400);
     }
   });
 
