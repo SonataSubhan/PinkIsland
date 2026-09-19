@@ -218,9 +218,16 @@ h1{
   .note{padding:18px}
 }
 
+/* REDUCED MOTION SOFTENS, IT DOES NOT SWITCH OFF. Windows reports "reduce" whenever
+   Settings > Accessibility > Visual effects > Animation effects is off, which many laptops
+   ship with — and the first version of this page became a still picture there while Ubuntu
+   showed everything. Now nothing slides or pulses, but letters and panels still fade in,
+   petals still drift (slower, fewer), and the hearts still follow the cursor, because the
+   visitor is the one moving them. */
 @media (prefers-reduced-motion:reduce){
   .start,.mark{animation:none}
-  .ltr,.mark,.card,.subtitle,.start,.meta,.note{transition-duration:.01ms}
+  .ltr{transform:none}
+  .card{transform:none}
 }
 </style>
 </head>
@@ -345,12 +352,12 @@ h1{
   });
 
   letters.forEach(function(s, i){
-    setTimeout(function(){ s.classList.add('in'); }, reduced ? 0 : 260 + i * 60);
+    setTimeout(function(){ s.classList.add('in'); }, 260 + i * (reduced ? 40 : 60));
   });
 
   setTimeout(function(){
     document.body.classList.add('ready');
-  }, reduced ? 0 : 260 + letters.length * 60);
+  }, 260 + letters.length * (reduced ? 40 : 60));
 
   /* -------------------------------------------------------------- canvas */
   var canvas = document.getElementById('stage');
@@ -371,7 +378,7 @@ h1{
       x: Math.random() * window.innerWidth,
       y: y === undefined ? Math.random() * window.innerHeight : y,
       r: 4 + depth * 7,
-      speed: 13 + depth * 24,
+      speed: (13 + depth * 24) * (reduced ? 0.55 : 1),
       drift: 9 + Math.random() * 22,
       phase: Math.random() * Math.PI * 2,
       spin: (Math.random() - 0.5) * 1.0,
@@ -383,9 +390,8 @@ h1{
   function reset(){
     size();
     petals = [];
-    var count = Math.round(Math.min(26, window.innerWidth / 40));
+    var count = Math.round(Math.min(reduced ? 14 : 26, window.innerWidth / 40));
     for (var i = 0; i < count; i++) petals.push(makePetal());
-    if (reduced){ ctx.clearRect(0,0,window.innerWidth,window.innerHeight); petals.forEach(drawPetal); }
   }
 
   function drawPetal(p){
@@ -443,7 +449,6 @@ h1{
   var lastSpawn = 0, lastX = 0, lastY = 0, primed = false;
 
   function trail(x, y){
-    if (reduced) return;
     var now = performance.now();
     var far = Math.hypot(x - lastX, y - lastY) > 26;
     if (primed && far && now - lastSpawn > 38){
@@ -495,7 +500,7 @@ h1{
 
   reset();
   window.addEventListener('resize', reset);
-  if (!reduced) requestAnimationFrame(frame);
+  requestAnimationFrame(frame);
 
   /* ------------------------------------------------------------ the click
      A burst wherever you press, and the game's own line once you have done
@@ -505,10 +510,8 @@ h1{
   var eggTimer;
 
   document.addEventListener('click', function(e){
-    if (!reduced){
-      for (var i = 0; i < 9; i++) hearts.push(makeHeart(e.clientX, e.clientY, true));
-      if (hearts.length > 120) hearts.splice(0, hearts.length - 120);
-    }
+    for (var i = 0; i < (reduced ? 5 : 9); i++) hearts.push(makeHeart(e.clientX, e.clientY, true));
+    if (hearts.length > 120) hearts.splice(0, hearts.length - 120);
 
     if (++clicks === 5){
       egg.classList.add('in');
